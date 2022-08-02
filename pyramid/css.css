@@ -1,0 +1,12 @@
+.pyramid > div > div{
+    width: 50px;
+    height: 50px;
+    background-color: aqua;
+    border: 2px black solid;
+    display: flex;
+}
+
+.pyramid > div {
+    display: flex;
+    justify-content: center;
+}
