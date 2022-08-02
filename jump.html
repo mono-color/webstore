@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>점프 게임</title>
+
+    <style>
+        #container {
+            border: 2px solid black;
+            width: 1400px;
+            height: 700px;
+            position: relative;
+        }
+
+        #character {
+            width: 200px;
+            height: 240px;
+            position: absolute;
+            display: inline-block;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        #background {
+            position: absolute;
+            overflow: hidden;
+            width: 1400px;
+            height: 300px;
+            display: flex;
+        }
+
+        img {
+            position: absolute;
+        }
+
+        #bottom {
+            width: 1300px;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            overflow: hidden;
+        }
+
+        #megaman {
+            background: url('./img/megaman.png') no-repeat -13px -52px;
+            width: 168px;
+            height: 191px;
+        }
+
+        #score {
+            position: absolute;
+            display: inline-block;
+            left: 30px;
+            top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="background">
+            <img src="./img/clouds.png" alt="" width="1400" height="300" class="clouds">
+            <img src="./img/clouds.png" alt="" width="1400" height="300" class="clouds">
+        </div>
+        <div id="character">
+            <div id="megaman"></div>
+        </div>
+        <div id="bottom">
+        </div>
+        <h1 id="score">0</h1>
+    </div>
+
+    <script>
+        const v_me = document.getElementById("character");
+        const v_btn = document.getElementById("btn_jump");
+
+        const initTop = 460;
+
+        v_me.style.left = "50px";
+        v_me.style.top = initTop + "px";
+
+        // 캐릭터가 땅에 맞닿은 높이는 600px 기준으로
+        // 위로 점프뛰면 600 -n , 즉 n 수치만큼 위로 상승한다.
+
+        // 연직운동시, 위치 공식
+        // y = v*t - 0.5*9.8*t*t
+
+        const v = 100;
+        const g = 18;
+        let t = 0;
+        let y = 0;
+
+        let jumpCount = 0;
+        let isJump = false;
+
+        let oneJumpTimer = null;
+
+        // 클릭 이벤트
+        // 점프 G: 71
+        window.addEventListener("keydown", function (event) {
+			if(event.keyCode == "71"){
+                if(!isJump){
+                    isJump = true;
+                    jumpCount = 1;
+                    t = 0;
+                    f_jump();
+                }else{
+                    if(jumpCount == 1){
+                        t = 0;
+                        jumpCount = 2;
+                        currentTop = parseInt(v_me.style.top);
+                        clearTimeout(oneJumpTimer);
+                        f_doubleJump();
+                    }
+                }
+			}
+        }, true);
+
+        let currentTop = 0;
+
+        function f_jump(){
+            y = v*t - (0.5*g*t*t);
+
+            if(t != 0 && y <= 0){
+                v_me.style.top = initTop + "px";
+                isJump = false;
+                jumpCount = 0;
+                f_run();
+                return;
+            }
+            clearTimeout(v_running);
+            v_mega.style.background = "url('./img/megaman.png') no-repeat -1023px -7px";
+            v_mega.style.width = "205px";
+            v_mega.style.height = "236px";
+
+            const temp = -1 * parseInt(y);
+            v_me.style.top = (initTop + temp) + "px";
+            const v_height = parseInt(v_me.style.top);
+
+            t += 0.1;
+            oneJumpTimer = setTimeout(f_jump, 10);
+        }
+
+        function f_doubleJump(){
+            y = v*t - (0.5*g*t*t);
+
+            const temp = -1 * parseInt(y);
+            const v_height = parseInt(v_me.style.top);
+
+            if(t != 0 && y <= 0 && v_height >= initTop){
+                v_me.style.top = initTop + "px";
+                isJump = false;
+                jumpCount = 0;
+                f_run();
+                return;
+            }
+
+            v_me.style.top = (currentTop + temp) + "px";
+
+            t += 0.1;
+            setTimeout(f_doubleJump, 10);
+        }
+
+        // 달리기
+        const v_mega = document.getElementById("megaman");
+        let v_running = null;
+        const runArray = [{
+            "background" : "url('./img/megaman.png') no-repeat -21px -325px",
+            "width" : "191px",
+            "height" : "172px"
+        }, {
+            "background" : "url('./img/megaman.png') no-repeat -300px -308px",
+            "width" : "129px",
+            "height" : "191px"
+        }, {
+            "background" : "url('./img/megaman.png') no-repeat -525px -325px",
+            "width" : "166px",
+            "height" : "174px"
+        }];
+        let v_num = 0;
+        function f_run(){
+            v_mega.style.background = runArray[v_num % 3].background;
+            v_mega.style.width = runArray[v_num % 3].width;
+            v_mega.style.height = runArray[v_num % 3].height;
+
+            v_num++;
+            v_running = setTimeout(f_run, 200);
+        }
+
+        f_run();
+
+        const v_clouds = document.querySelectorAll(".clouds");
+
+        if(v_clouds[0].style.left == ""){
+            v_clouds[0].style.left = "0px";
+            v_clouds[1].style.left = "1400px";
+        }
+
+        let v_speedT = 40;
+        let v_speedL = 5;
+
+        // 배경 슬라이드
+        function f_slide() {
+            const v_left0 = parseInt(v_clouds[0].style.left);
+            const v_left1 = parseInt(v_clouds[1].style.left);
+
+            v_clouds[0].style.left = v_left0 - v_speedL + "px";
+            v_clouds[1].style.left = v_left1 - v_speedL + "px";
+            
+            if(v_left0 <= -1400){
+                v_clouds[0].style.left = (1400 - v_speedL) + "px";
+            }
+
+            if(v_left1 <= -1400){
+                v_clouds[1].style.left = (1400 - v_speedL) + "px";
+            }
+
+
+            setTimeout(f_slide, v_speedT);
+        }
+
+        f_slide();
+
+
+        // 장애물 생성
+        let createSpeed = 3000;
+        function f_create(){
+            const v_img = document.createElement("img");
+            v_img.src = "./img/spike.png";
+            v_img.setAttribute("width", "80");
+            v_img.setAttribute("height", "120");
+            v_img.setAttribute("position", "absolute");
+            v_img.setAttribute("left", "1300px");
+            v_img.setAttribute("class", "spikes");
+            document.querySelector("#bottom").appendChild(v_img);
+
+            document.querySelector("#bottom").childNodes[document.querySelector("#bottom").childNodes.length-1].style.left = "1300px";
+
+            const v_term = createSpeed - Math.round(Math.random() * 2000);
+            setTimeout(f_create, v_term);
+        }
+
+        setTimeout(f_create, 2000);
+
+
+        // 장애물 이동
+        function f_spike(){
+            const v_spikeArray = document.querySelectorAll(".spikes");
+            for(let i = 0; i < v_spikeArray.length; i++){
+                const v_temp = parseInt(v_spikeArray[i].style.left);
+
+                if(!isJump){
+                    if(v_temp > 50 && v_temp < 230){
+                        alert("Game Over\n\nScore: " + (v_score*100));
+                        window.location.reload();
+                    }
+                }
+
+                v_spikeArray[i].style.left = v_temp - (v_speedL*2) + "px";
+
+                if(v_temp <= -100){
+                    document.querySelector("#bottom").removeChild(document.querySelector("#bottom").childNodes[0]);
+                }
+            }
+
+            setTimeout(f_spike, v_speedT);
+        }
+
+        f_spike();
+
+        // 점수용 타이머
+        let v_score = 0;
+        function f_timer(){
+            v_score++;
+            document.getElementById("score").innerHTML = (v_score) * 100;
+            // 1000점 이상이면 속도 증가
+            if(v_score >= 10){
+                v_speedT = 20;
+                createSpeed = 2200;
+            }
+
+            setTimeout(f_timer, 5000);
+        }
+
+        setTimeout(f_timer, 5000);
+
+    </script>
+</body>
+</html>
